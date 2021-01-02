@@ -41,7 +41,6 @@ if [ "$EUID" -ne 0 ]
 fi
 
 # check if pv, tar, gzip
-if [ $(which pv) ]; then echo "true"; fi
 if [ ! $(which pv) ]; then
 	echo "***error *** /usr/bin/pv does not exist. Please install it!"
 	exit
