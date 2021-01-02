@@ -41,20 +41,19 @@ if [ "$EUID" -ne 0 ]
 fi
 
 # check if pv, tar, gzip
-
-if [ ! -f /usr/bin/pv ]; then
+if [ ! $(which pv) ]; then
 	echo "***error *** /usr/bin/pv does not exist. Please install it!"
 	exit
 fi
-if [ ! -f /bin/tar ]; then
+if [ ! $(which /bin/tar) ]; then
 	echo "***error *** /bin/tar does not exist. Please install it!"
         exit
 fi
-if [ ! -f /bin/gzip ]; then
+if [ ! $(which /bin/gzip) ]; then
         echo "***error *** /bin/gzip does not exist. Please install it!"
         exit
 fi
-if [ ! -f /usr/bin/du ]; then
+if [ ! $(which /usr/bin/du) ]; then
         echo "***error *** /usr/bin/du does not exist. Please install it!"
         exit
 fi
