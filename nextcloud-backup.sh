@@ -1,151 +1,226 @@
 #!/bin/bash
 
-backupLocation=/home/{USERDIR}
+### SETUP AREA
+###
+
+backupDestination=/home/{USERDIR}
 nextcloudInstallation=/var/www/nextcloud
 nextcloudData=/opt/nextcloud-data
 apacheUser=www-data
 mysqlUser=nxtclouddb
 mysqlDatabase=nxtclouddb
-mysqlPassword='123456789'
-backupDate=$(date +%Y%m%d) # dont change this !
-sizeOfDir=0 # dont change this !
+mysqlPassword=''
+TMP_PATH=/tmp
+
+###
+### END SETUP AREA
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
-#	1. Activate Maintenance Mode
-#	2. Backup Installation Dir in Apache Web Folder
-#	3. Backup Data Dir
-# 	4. Backup MySQL Database
-#	5. Deactivate Maintenance Mode
-# 	6. Size, Location and Info-Output
+# 1. Activate Maintenance Mode
+# 2. Backup Installation Dir in Apache Web Folder
+# 3. Backup Data Dir
+# 4. Backup MySQL Database
+# 5. Deactivate Maintenance Mode
+# 6. Size, Location and Info-Output
 #
-#   Source mainly: https://www.c-rieger.de/nextcloud-sicherung-und-wiederherstellung/
+#    Source mainly: https://www.c-rieger.de/nextcloud-sicherung-und-wiederherstellung/
 #
 #
-#   Script does not check for available free space on the drive!
-#   Have Fun
+#    Script does not check for available free space on the drive!
+#    Have Fun
 #
-#   From remote do something like this:
-#   $ scp -rp ${server-ip}:{source_dir_on_server} {destination_dir_on_local}
+#    From remote do something like this:
+#    $ scp -rp ${server-ip}:{source_dir_on_server} {destination_dir_on_local}
 #
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+function nextcloudMaintananceModeOn {
+  echo "Turn Nextcloud Maintenance Mode ON"
+  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --on >/dev/null
+}
 
-#       0. Preparations
-# Check if root
+function nextcloudMaintananceModeOff {
+  echo "Turn Nextcloud Maintenance Mode OFF"
+  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off 
+}
+
+### 0. Preparations
+###
+
+## Check if root
 
 if [ "$EUID" -ne 0 ]
   then echo "***error *** Please run as root"
   exit
 fi
 
-# check if pv, tar, gzip
-if [ ! $(which pv) ]; then
-	echo "***error *** /usr/bin/pv does not exist. Please install it!"
-	exit
+## check if cli tool exist on the system
+
+declare -a CLI_TOOLS
+
+CLI_TOOLS=(
+  "pv"
+  "tar"
+  "gzip"
+  "du"
+	"mysqldump"
+)
+
+for tool in ${CLI_TOOLS[@]}
+do
+  if [ ! $(which $tool) ]; then
+    echo "***error *** $tool does not exist on this system. Please install it! Exiting..."
+    exit
+  fi
+done
+
+# check if the environment variable for the mysql Password is set
+# if not use the password that was set in the variable
+# env var password is always preferred to the one set inside the file
+
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z $mysqlPassword ]
+then
+  echo "no mysql password set"
+  echo "exiting..."
+  exit
 fi
-if [ ! $(which /bin/tar) ]; then
-	echo "***error *** /bin/tar does not exist. Please install it!"
-        exit
+
+if [ ! -z "$NEXTCLOUDMYSQLPW" ]
+then
+  mysqlPassword=$NEXTCLOUDMYSQLPW
 fi
-if [ ! $(which /bin/gzip) ]; then
-        echo "***error *** /bin/gzip does not exist. Please install it!"
-        exit
+
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ ! -z $mysqlPassword ]
+then
+  echo "Using mySQL Password that was set in the file"
 fi
-if [ ! $(which /usr/bin/du) ]; then
-        echo "***error *** /usr/bin/du does not exist. Please install it!"
-        exit
-fi
+
+# fetch current date as YYYYMMDD
+DATESTAMP=$(date +%Y-%m-%d) 
 
 # Create Backup Directory TARGET
+backupDestination="$backupDestination/nextcloud_backup_$DATESTAMP"
 
-backupLocation="$backupLocation/nextcloud_backup_$backupDate"
-
-if [ ! -d $backupLocation ]; then
-	mkdir $backupLocation
-else
-	echo "*** error*** Backup Location: $backupLocation already exists!"
-	exit
+if [ -d $backupDestination ]; then
+  echo "*** error*** Directory: $backupDestination already exists!"
+  exit
 fi
+
+mkdir $backupDestination
 
 echo "############## Nextcloud Backup 101 ##############"
 
+### 1. Activate Maintenance Mode in nextcloud
+###
 
-#	1. Activate Maintenance Mode in nextcloud
-
-if (sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --on >/dev/null); then
-	echo "1. Nextcloud Maintenance Mode ON"
+if (nextcloudMaintananceModeOn); then
+  echo "..okay"
+	echo ""
 else
-	echo "***error *** Nextcloud occ Maintenance Mode was not successfull!"
-	exit
+  echo "***error *** Nextcloud occ Maintenance Mode was not successfull!"
+  exit
 fi
 
+### 2. Backup installation directories and files and move to backupDestination
+###
 
-#	2. Backup Installation Dir in Apache Web Folder
+# set default size to zero for counting the 
+# size of the nextcloud installation directory
+sizeOfDir=0 
 
-if [ -d "$backupLocation" ] && [ -d "$nextcloudInstallation" ]; then
-	echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
-	sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
-	tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupLocation/nextcloud-InstallationDir_$backupDate.tar.gz"
-elif [ ! -d "$backupLocation" ]; then
-	echo "***error *** Directory not found: $backupLocation"
-	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
-	exit 1
-elif [ ! -d "$nextcloudInstallation" ]; then
-	echo "***error *** Directory not found: $nextcloudInstallation"
-	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
-	exit 1
+if [ ! -d "$backupDestination" ]; then
+  echo "***error *** Directory not found: $backupDestination"
+  nextcloudMaintananceModeOff
+  exit 1
 fi
+
+if [ ! -d "$nextcloudInstallation" ]; then
+  echo "***error *** Directory not found: $nextcloudInstallation"
+  nextcloudMaintananceModeOff
+  exit 1
+fi
+
+if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
+  echo "Creating Backup of Installation Directory $nextcloudInstallation ..."
+  sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
+  tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
+fi
+
+echo "...okay"
 echo ""
 
-#	3. Backup Data Directory
+### 3. Backup Data Directory
+###
 
-if [ -d "$backupLocation" ] && [ -d "$nextcloudData" ]; then
-        echo "3. Creating Backup of Data Directory $nextcloudData ..."
-	sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
-        tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupLocation/nextcloud-DataDir_$backupDate.tar.gz"
-elif [ ! -d "$backupLocation" ]; then
-        echo "***error *** Directory not found: $backupLocation"
-        sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
-        exit 1
-elif [ ! -d "$nextcloudInstallation" ]; then
-        echo "***error *** Directory not found: $nextcloudInstallation"
-        sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
-        exit 1
+if [ ! -d "$backupDestination" ]; then
+  echo "***error *** Directory not found: $backupDestination"
+  nextcloudMaintananceModeOff
+  exit 1
 fi
 
+if [ ! -d "$nextcloudInstallation" ]; then
+  echo "***error *** Directory not found: $nextcloudInstallation"
+  nextcloudMaintananceModeOff
+  exit 1
+fi
 
-#	4. MySql Backup
+if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
+  echo "Creating Backup of Data Directory $nextcloudData ..."
+  sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
+  tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
+fi
 
-if [ ! -d $backupLocation ]; then
-	echo "***error *** Directory does not exist: $backupLocation"
-	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
-	exit 1
+echo "...okay"
+echo ""
+
+### 4. MySQL Backup
+###
+
+# check if destination really exists
+
+if [ ! -d $backupDestination ]; then
+  echo "***error *** Directory does not exist: $backupDestination"
+  nextcloudMaintananceModeOff
+  exit 1
+fi
+
+# write mysql config file that is used to hide the password from the process list
+
+mysqlConfigFile=${TMP_PATH}/.mylogin.cnf
+
+printf "[mysqldump]\nuser=${mysqlUser}\npassword=${mysqlPassword}\n" > $mysqlConfigFile
+
+chmod 600 ${mysqlConfigFile}
+
+# prepare backup
+
+echo "Creating Backup of MySQL Database $mysqlDatabase ..."
+mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+echo "...compressing database dump"
+gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
+rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+rm ${mysqlConfigFile}
+
+echo "...okay"
+echo ""
+
+### 5. Deactivate Maintenance Mode
+###
+
+if (nextcloudMaintananceModeOff); then
+  echo "...okay"
 else
-        echo "4. Creating Backup of MySQL Database $mysqlDatabase ..."
-	mysqldump --single-transaction \
-	    -h localhost -u $mysqlUser -p $mysqlDatabase \
-	    --password=$mysqlPassword | gzip > "$backupLocation/nextcloud_mysqlDatabase_$backupDate.sql.gz"
+  echo "***error *** Something went wrong with turning nextcloud maintenance mode off"
 fi
 
+### 6. Size, Location, Infomation Output
+###
 
-#	5. Deactivate Maintenance MOde
-
-if (sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off >/dev/null); then
-	echo "5. Nextcloud Maintenance Mode OFF"
-else
-	echo "***error *** Something went wrong with turning nextcloud maintenance mode off"
-fi
-
-
-
-#	6. Size, Location, Infomation Output
-
-backupSize=$(du -csh $backupLocation | grep total | awk '{ print $1 }')
+backupSize=$(du -csh $backupDestination | grep total | awk '{ print $1 }')
 echo ""
 echo "Done."
 echo "Your Backup Information:"
-echo "Location:      $backupLocation"
+echo "Location:      $backupDestination"
 echo "Size:          $backupSize"
-# echo "Duration:		$backupDuration"
