@@ -147,7 +147,6 @@ else
 fi
 
 
-
 ###	6. Size, Location, Infomation Output
 
 backupSize=$(du -csh $backupLocation | grep total | awk '{ print $1 }')
@@ -156,4 +155,3 @@ echo "Done."
 echo "Your Backup Information:"
 echo "Location:      $backupLocation"
 echo "Size:          $backupSize"
-# echo "Duration:		$backupDuration"
