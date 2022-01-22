@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ### SETUP AREA
+###
 
 backupDestination=/home/{USERDIR}
 nextcloudInstallation=/var/www/nextcloud
@@ -42,6 +43,8 @@ function nextcloudMaintananceModeOff {
 
 
 ### 0. Preparations
+###
+
 ## Check if root
 
 if [ "$EUID" -ne 0 ]
@@ -87,6 +90,7 @@ echo "############## Nextcloud Backup 101 ##############"
 
 
 ###	1. Activate Maintenance Mode in nextcloud
+###
 
 if (nextcloudMaintananceModeOn); then
 	echo "1. Turn Nextcloud Maintenance Mode ON"
@@ -97,6 +101,7 @@ fi
 
 
 ###	2. Backup installation directories and files and move to backupDestination
+###
 
 # set default size to zero for counting the 
 # size of the nextcloud installation directory
@@ -122,6 +127,7 @@ echo ""
 
 
 ###	3. Backup Data Directory
+###
 
 if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
         echo "3. Creating Backup of Data Directory $nextcloudData ..."
@@ -139,6 +145,7 @@ fi
 
 
 ###	4. MySql Backup
+###
 
 if [ ! -d $backupDestination ]; then
 	echo "***error *** Directory does not exist: $backupDestination"
@@ -153,8 +160,8 @@ gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDesti
 rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
 
 
-
 ###	5. Deactivate Maintenance Mode
+###
 
 if (nextcloudMaintananceModeOff); then
 	echo "5. Nextcloud Maintenance Mode OFF"
@@ -164,6 +171,7 @@ fi
 
 
 ###	6. Size, Location, Infomation Output
+###
 
 backupSize=$(du -csh $backupDestination | grep total | awk '{ print $1 }')
 echo ""
