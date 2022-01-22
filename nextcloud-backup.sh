@@ -54,7 +54,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-## check if pv, tar, gzip and du exists on the system
+## check if cli tool exist on the system
 
 declare -a CLI_TOOLS
 
@@ -63,6 +63,7 @@ CLI_TOOLS=(
   "tar"
   "gzip"
   "du"
+	"mysqldump"
 )
 
 for tool in ${CLI_TOOLS[@]}
