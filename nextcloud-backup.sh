@@ -146,7 +146,7 @@ fi
 echo "4. Creating Backup of MySQL Database $mysqlDatabase ..."
 mysqldump --single-transaction -h localhost -u $mysqlUser -p $mysqlDatabase --password=$mysqlPassword > ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
 echo "...compressing database dump"
-gzip ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
+gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
 rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
 
 
