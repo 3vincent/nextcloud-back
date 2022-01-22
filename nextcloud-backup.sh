@@ -133,12 +133,14 @@ if [ ! -d $backupDestination ]; then
 	echo "***error *** Directory does not exist: $backupDestination"
 	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
 	exit 1
-else
-        echo "4. Creating Backup of MySQL Database $mysqlDatabase ..."
-	mysqldump --single-transaction \
-	    -h localhost -u $mysqlUser -p $mysqlDatabase \
-	    --password=$mysqlPassword | gzip > "$backupDestination/nextcloud_mysqlDatabase_$DATESTAMP.sql.gz"
 fi
+
+echo "4. Creating Backup of MySQL Database $mysqlDatabase ..."
+mysqldump --single-transaction -h localhost -u $mysqlUser -p $mysqlDatabase --password=$mysqlPassword > ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+echo "...compressing database dump"
+gzip ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
+rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+
 
 
 ###	5. Deactivate Maintenance Mode
