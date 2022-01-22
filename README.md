@@ -1,6 +1,6 @@
 # nextcloud-backup
   
-This bash script makes a full backup of a nextcloud installation on a LAMP Stack Sever.
+This bash script makes a full backup of a nextcloud installation on a LAMP Stack Server.
 
 There are a few requirements: `tar` `gzip` `pv` `du` `mysqldump` need to be installed on your system.  
   
@@ -26,7 +26,7 @@ Change these variables for personal use:
 - apacheUser=www-data
 - mysqlUser=nxtclouddb
 - mysqlDatabase=nxtclouddb
-- mysqlPassword='123456789'
+- mysqlPassword=''
 ```
 
 ## Setup
@@ -38,6 +38,18 @@ After downloading, make the script executable
 Edit the script with your favorite editor, to set your preferences in the top of the file `SETUP AREA`:
 
     nano nextcloud-backup.sh
+
+## Environment Variable vs. Config Variable
+
+(1) You can either pass your mySQL password as an environment variable at execution time, like this `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`. 
+
+(2) Or you can edit the SETUP Area in `nextcloud-backup.sh`, and add the password at the top of the file (`mysqlPassword=''`). 
+
+If you set the password as environment variable at exection (1) it overwrites the password that is set in the file (2). 
+
+If the password is set in the file itself (2), it mentions this at startup.
+
+If both options are empty (1)+(2), the script will quit. 
 
 ## Execution Examples
 Run from the local system with MySQL Password as Env var:
