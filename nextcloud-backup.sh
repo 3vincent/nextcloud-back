@@ -40,7 +40,7 @@ function nextcloudMaintananceModeOn {
 
 function nextcloudMaintananceModeOff {
   echo "Turn Nextcloud Maintenance Mode OFF"
-  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off >/dev/null
+  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off 
 }
 
 
@@ -125,7 +125,9 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
   tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
 fi
 
+echo "...okay"
 echo ""
+
 
 
 ### 3. Backup Data Directory
@@ -149,6 +151,9 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
   tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
 fi
 
+echo "...okay"
+echo ""
+
 ### 4. MySql Backup
 ###
 
@@ -164,6 +169,8 @@ echo "...compressing database dump"
 gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
 rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
 
+echo "...okay"
+echo ""
 
 ### 5. Deactivate Maintenance Mode
 ###
