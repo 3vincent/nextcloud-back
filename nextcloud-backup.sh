@@ -90,7 +90,6 @@ fi
 if [ ! -z "$NEXTCLOUDMYSQLPW" ]
 then
   mysqlPassword=$NEXTCLOUDMYSQLPW
-  echo $mysqlPassword
 fi
 
 if [ -z "$NEXTCLOUDMYSQLPW" ] && [ ! -z $mysqlPassword ]
@@ -118,6 +117,7 @@ echo "############## Nextcloud Backup 101 ##############"
 
 if (nextcloudMaintananceModeOn); then
   echo "..okay"
+	echo ""
 else
   echo "***error *** Nextcloud occ Maintenance Mode was not successfull!"
   exit
@@ -177,6 +177,8 @@ echo ""
 
 ### 4. MySql Backup
 ###
+
+# check if destination really exists
 
 if [ ! -d $backupDestination ]; then
   echo "***error *** Directory does not exist: $backupDestination"
