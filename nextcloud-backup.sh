@@ -129,20 +129,23 @@ echo ""
 ###	3. Backup Data Directory
 ###
 
-if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
-        echo "3. Creating Backup of Data Directory $nextcloudData ..."
-	sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
-        tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
-elif [ ! -d "$backupDestination" ]; then
+if [ ! -d "$backupDestination" ]; then
         echo "***error *** Directory not found: $backupDestination"
 				nextcloudMaintananceModeOff
         exit 1
-elif [ ! -d "$nextcloudInstallation" ]; then
+fi
+
+if [ ! -d "$nextcloudInstallation" ]; then
         echo "***error *** Directory not found: $nextcloudInstallation"
 				nextcloudMaintananceModeOff
         exit 1
 fi
 
+if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
+        echo "3. Creating Backup of Data Directory $nextcloudData ..."
+	sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
+        tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
+fi
 
 ###	4. MySql Backup
 ###
