@@ -16,18 +16,18 @@ TMP_PATH=/tmp/
 #	1. Activate Maintenance Mode
 #	2. Backup Installation Dir in Apache Web Folder
 #	3. Backup Data Dir
-# 	4. Backup MySQL Database
+# 4. Backup MySQL Database
 #	5. Deactivate Maintenance Mode
-# 	6. Size, Location and Info-Output
+# 6. Size, Location and Info-Output
 #
-#   Source mainly: https://www.c-rieger.de/nextcloud-sicherung-und-wiederherstellung/
+#    Source mainly: https://www.c-rieger.de/nextcloud-sicherung-und-wiederherstellung/
 #
 #
-#   Script does not check for available free space on the drive!
-#   Have Fun
+#    Script does not check for available free space on the drive!
+#    Have Fun
 #
-#   From remote do something like this:
-#   $ scp -rp ${server-ip}:{source_dir_on_server} {destination_dir_on_local}
+#    From remote do something like this:
+#    $ scp -rp ${server-ip}:{source_dir_on_server} {destination_dir_on_local}
 #
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
