@@ -72,7 +72,7 @@ done
 ## Create Backup Directory TARGET
 
 # fetch current date as YYYYMMDD
-DATESTAMP=$(date +%Y%m%d) 
+DATESTAMP=$(date +%Y-%m-%d) 
 
 backupDestination="$backupDestination/nextcloud_backup_$DATESTAMP"
 
