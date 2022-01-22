@@ -9,8 +9,6 @@ apacheUser=www-data
 mysqlUser=nxtclouddb
 mysqlDatabase=nxtclouddb
 mysqlPassword='123456789'
-backupDate=$(date +%Y%m%d) # dont change this !
-sizeOfDir=0 # dont change this !
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
@@ -64,6 +62,7 @@ fi
 ## Create Backup Directory TARGET
 
 # fetch current date as YYYYMMDD
+backupDate=$(date +%Y%m%d) 
 
 backupLocation="$backupLocation/nextcloud_backup_$backupDate"
 
@@ -91,6 +90,7 @@ fi
 
 # set default size to zero for counting the 
 # size of the nextcloud installation directory
+sizeOfDir=0 
 if [ -d "$backupLocation" ] && [ -d "$nextcloudInstallation" ]; then
 	echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
 	sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
