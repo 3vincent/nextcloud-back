@@ -10,6 +10,7 @@ mysqlUser=nxtclouddb
 mysqlDatabase=nxtclouddb
 mysqlPassword='123456789'
 
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 #	1. Activate Maintenance Mode
@@ -41,23 +42,24 @@ if [ "$EUID" -ne 0 ]
 fi
 
 ## check if pv, tar, gzip and du exists on the system
-# check if pv, tar, gzip
-if [ ! $(which pv) ]; then
-	echo "***error *** /usr/bin/pv does not exist. Please install it!"
-	exit
-fi
-if [ ! $(which /bin/tar) ]; then
-	echo "***error *** /bin/tar does not exist. Please install it!"
-        exit
-fi
-if [ ! $(which /bin/gzip) ]; then
-        echo "***error *** /bin/gzip does not exist. Please install it!"
-        exit
-fi
-if [ ! $(which /usr/bin/du) ]; then
-        echo "***error *** /usr/bin/du does not exist. Please install it!"
-        exit
-fi
+
+declare -a CLI_TOOLS
+
+CLI_TOOLS=(
+  "pv"
+  "tar"
+  "gzip"
+	"du"
+)
+
+for tool in ${CLI_TOOLS[@]}
+do
+	if [ ! $(which $tool) ]; then
+		echo "***error *** $tool does not exist on this system. Please install it! Exiting..."
+    exit
+	fi
+done
+
 
 ## Create Backup Directory TARGET
 
@@ -91,6 +93,7 @@ fi
 # set default size to zero for counting the 
 # size of the nextcloud installation directory
 sizeOfDir=0 
+
 if [ -d "$backupLocation" ] && [ -d "$nextcloudInstallation" ]; then
 	echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
 	sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
