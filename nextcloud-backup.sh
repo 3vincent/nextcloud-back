@@ -32,6 +32,14 @@ TMP_PATH=/tmp/
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+function nextcloudMaintananceModeOn {
+	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --on >/dev/null
+}
+
+function nextcloudMaintananceModeOff {
+	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off >/dev/null
+}
+
 
 ### 0. Preparations
 ## Check if root
@@ -80,8 +88,8 @@ echo "############## Nextcloud Backup 101 ##############"
 
 ###	1. Activate Maintenance Mode in nextcloud
 
-if (sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --on >/dev/null); then
-	echo "1. Nextcloud Maintenance Mode ON"
+if (nextcloudMaintananceModeOn); then
+	echo "1. Turn Nextcloud Maintenance Mode ON"
 else
 	echo "***error *** Nextcloud occ Maintenance Mode was not successfull!"
 	exit
@@ -100,11 +108,11 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
 	tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
 elif [ ! -d "$backupDestination" ]; then
 	echo "***error *** Directory not found: $backupDestination"
-	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
+	nextcloudMaintananceModeOff
 	exit 1
 elif [ ! -d "$nextcloudInstallation" ]; then
 	echo "***error *** Directory not found: $nextcloudInstallation"
-	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
+  nextcloudMaintananceModeOff
 	exit 1
 fi
 echo ""
@@ -118,11 +126,11 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
         tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
 elif [ ! -d "$backupDestination" ]; then
         echo "***error *** Directory not found: $backupDestination"
-        sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
+				nextcloudMaintananceModeOff
         exit 1
 elif [ ! -d "$nextcloudInstallation" ]; then
         echo "***error *** Directory not found: $nextcloudInstallation"
-        sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
+				nextcloudMaintananceModeOff
         exit 1
 fi
 
@@ -131,7 +139,7 @@ fi
 
 if [ ! -d $backupDestination ]; then
 	echo "***error *** Directory does not exist: $backupDestination"
-	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
+	nextcloudMaintananceModeOff
 	exit 1
 fi
 
@@ -145,7 +153,7 @@ rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
 
 ###	5. Deactivate Maintenance Mode
 
-if (sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off >/dev/null); then
+if (nextcloudMaintananceModeOff); then
 	echo "5. Nextcloud Maintenance Mode OFF"
 else
 	echo "***error *** Something went wrong with turning nextcloud maintenance mode off"
