@@ -73,16 +73,14 @@ do
   fi
 done
 
-
-## Create Backup Directory TARGET
-
 # fetch current date as YYYYMMDD
 DATESTAMP=$(date +%Y-%m-%d) 
 
+# Create Backup Directory TARGET
 backupDestination="$backupDestination/nextcloud_backup_$DATESTAMP"
 
 if [ -d $backupDestination ]; then
-  echo "*** error*** Backup Location: $backupDestination already exists!"
+  echo "*** error*** Directory: $backupDestination already exists!"
   exit
 fi
 
@@ -122,7 +120,7 @@ if [ ! -d "$nextcloudInstallation" ]; then
 fi
 
 if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
-  echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
+  echo "Creating Backup of Installation Directory $nextcloudInstallation ..."
   sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
   tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
 fi
@@ -146,7 +144,7 @@ if [ ! -d "$nextcloudInstallation" ]; then
 fi
 
 if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
-  echo "3. Creating Backup of Data Directory $nextcloudData ..."
+  echo "Creating Backup of Data Directory $nextcloudData ..."
   sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
   tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
 fi
@@ -160,7 +158,7 @@ if [ ! -d $backupDestination ]; then
   exit 1
 fi
 
-echo "4. Creating Backup of MySQL Database $mysqlDatabase ..."
+echo "Creating Backup of MySQL Database $mysqlDatabase ..."
 mysqldump --single-transaction -h localhost -u $mysqlUser -p $mysqlDatabase --password=$mysqlPassword > ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
 echo "...compressing database dump"
 gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
