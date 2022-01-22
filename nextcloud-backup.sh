@@ -9,7 +9,7 @@ nextcloudData=/opt/nextcloud-data
 apacheUser=www-data
 mysqlUser=nxtclouddb
 mysqlDatabase=nxtclouddb
-mysqlPassword='123456789'
+mysqlPassword=''
 TMP_PATH=/tmp
 
 
