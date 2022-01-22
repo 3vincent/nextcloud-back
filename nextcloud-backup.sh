@@ -76,12 +76,12 @@ DATESTAMP=$(date +%Y%m%d)
 
 backupDestination="$backupDestination/nextcloud_backup_$DATESTAMP"
 
-if [ ! -d $backupDestination ]; then
-	mkdir $backupDestination
-else
+if [ -d $backupDestination ]; then
 	echo "*** error*** Backup Location: $backupDestination already exists!"
 	exit
 fi
+
+mkdir $backupDestination
 
 echo "############## Nextcloud Backup 101 ##############"
 
