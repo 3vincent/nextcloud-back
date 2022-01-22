@@ -102,19 +102,22 @@ fi
 # size of the nextcloud installation directory
 sizeOfDir=0 
 
-if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
-	echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
-	sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
-	tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
-elif [ ! -d "$backupDestination" ]; then
+if [ ! -d "$backupDestination" ]; then
 	echo "***error *** Directory not found: $backupDestination"
 	nextcloudMaintananceModeOff
 	exit 1
-elif [ ! -d "$nextcloudInstallation" ]; then
+
+if [ ! -d "$nextcloudInstallation" ]; then
 	echo "***error *** Directory not found: $nextcloudInstallation"
   nextcloudMaintananceModeOff
 	exit 1
 fi
+
+if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
+	echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
+	sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
+	tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
+
 echo ""
 
 
