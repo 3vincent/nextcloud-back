@@ -10,7 +10,8 @@ apacheUser=www-data
 mysqlUser=nxtclouddb
 mysqlDatabase=nxtclouddb
 mysqlPassword='123456789'
-TMP_PATH=/tmp/
+TMP_PATH=/tmp
+
 
 ###
 ### END SETUP AREA
@@ -175,7 +176,7 @@ fi
 echo "...okay"
 echo ""
 
-### 4. MySql Backup
+### 4. MySQL Backup
 ###
 
 # check if destination really exists
@@ -186,11 +187,22 @@ if [ ! -d $backupDestination ]; then
   exit 1
 fi
 
+# write mysql config file that is used to hide the password from the process list
+
+mysqlConfigFile=${TMP_PATH}/.mylogin.cnf
+
+printf "[mysqldump]\nuser=${mysqlUser}\npassword=${mysqlPassword}\n" > $mysqlConfigFile
+
+chmod 600 ${mysqlConfigFile}
+
+# prepare backup
+
 echo "Creating Backup of MySQL Database $mysqlDatabase ..."
-mysqldump --single-transaction -h localhost -u $mysqlUser -p $mysqlDatabase --password=$mysqlPassword > ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
 echo "...compressing database dump"
 gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
 rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+rm ${mysqlConfigFile}
 
 echo "...okay"
 echo ""
