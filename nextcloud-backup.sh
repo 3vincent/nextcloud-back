@@ -12,7 +12,6 @@ mysqlDatabase=nxtclouddb
 mysqlPassword=''
 TMP_PATH=/tmp
 
-
 ###
 ### END SETUP AREA
 
