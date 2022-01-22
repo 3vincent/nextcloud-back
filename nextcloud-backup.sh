@@ -12,6 +12,9 @@ mysqlDatabase=nxtclouddb
 mysqlPassword='123456789'
 TMP_PATH=/tmp/
 
+###
+### END SETUP AREA
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # 1. Activate Maintenance Mode
@@ -73,6 +76,28 @@ do
     exit
   fi
 done
+
+# check if the environment variable for the mysql Password is set
+# if not use the password that was set in the variable
+# env var password is always preferred to the one set inside the file
+
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z $mysqlPassword ]
+then
+  echo "no mysql password set"
+  echo "exiting..."
+  exit
+fi
+
+if [ ! -z "$NEXTCLOUDMYSQLPW" ]
+then
+  mysqlPassword=$NEXTCLOUDMYSQLPW
+  echo $mysqlPassword
+fi
+
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ ! -z $mysqlPassword ]
+then
+  echo "Using mySQL Password that was set in the file"
+fi
 
 # fetch current date as YYYYMMDD
 DATESTAMP=$(date +%Y-%m-%d) 
