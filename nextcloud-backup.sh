@@ -46,7 +46,6 @@ function nextcloudMaintananceModeOff {
   sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off 
 }
 
-
 ### 0. Preparations
 ###
 
@@ -114,7 +113,6 @@ mkdir $backupDestination
 
 echo "############## Nextcloud Backup 101 ##############"
 
-
 ### 1. Activate Maintenance Mode in nextcloud
 ###
 
@@ -124,7 +122,6 @@ else
   echo "***error *** Nextcloud occ Maintenance Mode was not successfull!"
   exit
 fi
-
 
 ### 2. Backup installation directories and files and move to backupDestination
 ###
@@ -153,8 +150,6 @@ fi
 
 echo "...okay"
 echo ""
-
-
 
 ### 3. Backup Data Directory
 ###
@@ -206,7 +201,6 @@ if (nextcloudMaintananceModeOff); then
 else
   echo "***error *** Something went wrong with turning nextcloud maintenance mode off"
 fi
-
 
 ### 6. Size, Location, Infomation Output
 ###
