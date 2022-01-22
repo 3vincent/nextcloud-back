@@ -9,7 +9,7 @@ apacheUser=www-data
 mysqlUser=nxtclouddb
 mysqlDatabase=nxtclouddb
 mysqlPassword='123456789'
-
+TMP_PATH=/tmp/
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
