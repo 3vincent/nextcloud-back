@@ -2,7 +2,7 @@
 
 ### SETUP AREA
 
-backupLocation=/home/{USERDIR}
+backupDestination=/home/{USERDIR}
 nextcloudInstallation=/var/www/nextcloud
 nextcloudData=/opt/nextcloud-data
 apacheUser=www-data
@@ -64,14 +64,14 @@ done
 ## Create Backup Directory TARGET
 
 # fetch current date as YYYYMMDD
-backupDate=$(date +%Y%m%d) 
+DATESTAMP=$(date +%Y%m%d) 
 
-backupLocation="$backupLocation/nextcloud_backup_$backupDate"
+backupDestination="$backupDestination/nextcloud_backup_$DATESTAMP"
 
-if [ ! -d $backupLocation ]; then
-	mkdir $backupLocation
+if [ ! -d $backupDestination ]; then
+	mkdir $backupDestination
 else
-	echo "*** error*** Backup Location: $backupLocation already exists!"
+	echo "*** error*** Backup Location: $backupDestination already exists!"
 	exit
 fi
 
@@ -88,18 +88,18 @@ else
 fi
 
 
-###	2. Backup installation directories and files and move to backupLocation
+###	2. Backup installation directories and files and move to backupDestination
 
 # set default size to zero for counting the 
 # size of the nextcloud installation directory
 sizeOfDir=0 
 
-if [ -d "$backupLocation" ] && [ -d "$nextcloudInstallation" ]; then
+if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
 	echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
 	sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
-	tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupLocation/nextcloud-InstallationDir_$backupDate.tar.gz"
-elif [ ! -d "$backupLocation" ]; then
-	echo "***error *** Directory not found: $backupLocation"
+	tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
+elif [ ! -d "$backupDestination" ]; then
+	echo "***error *** Directory not found: $backupDestination"
 	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
 	exit 1
 elif [ ! -d "$nextcloudInstallation" ]; then
@@ -112,12 +112,12 @@ echo ""
 
 ###	3. Backup Data Directory
 
-if [ -d "$backupLocation" ] && [ -d "$nextcloudData" ]; then
+if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
         echo "3. Creating Backup of Data Directory $nextcloudData ..."
 	sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
-        tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupLocation/nextcloud-DataDir_$backupDate.tar.gz"
-elif [ ! -d "$backupLocation" ]; then
-        echo "***error *** Directory not found: $backupLocation"
+        tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
+elif [ ! -d "$backupDestination" ]; then
+        echo "***error *** Directory not found: $backupDestination"
         sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
         exit 1
 elif [ ! -d "$nextcloudInstallation" ]; then
@@ -129,15 +129,15 @@ fi
 
 ###	4. MySql Backup
 
-if [ ! -d $backupLocation ]; then
-	echo "***error *** Directory does not exist: $backupLocation"
+if [ ! -d $backupDestination ]; then
+	echo "***error *** Directory does not exist: $backupDestination"
 	sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off
 	exit 1
 else
         echo "4. Creating Backup of MySQL Database $mysqlDatabase ..."
 	mysqldump --single-transaction \
 	    -h localhost -u $mysqlUser -p $mysqlDatabase \
-	    --password=$mysqlPassword | gzip > "$backupLocation/nextcloud_mysqlDatabase_$backupDate.sql.gz"
+	    --password=$mysqlPassword | gzip > "$backupDestination/nextcloud_mysqlDatabase_$DATESTAMP.sql.gz"
 fi
 
 
@@ -152,9 +152,9 @@ fi
 
 ###	6. Size, Location, Infomation Output
 
-backupSize=$(du -csh $backupLocation | grep total | awk '{ print $1 }')
+backupSize=$(du -csh $backupDestination | grep total | awk '{ print $1 }')
 echo ""
 echo "Done."
 echo "Your Backup Information:"
-echo "Location:      $backupLocation"
+echo "Location:      $backupDestination"
 echo "Size:          $backupSize"
