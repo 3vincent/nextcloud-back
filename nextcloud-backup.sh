@@ -1,5 +1,7 @@
 #!/bin/bash
 
+### SETUP AREA
+
 backupLocation=/home/{USERDIR}
 nextcloudInstallation=/var/www/nextcloud
 nextcloudData=/opt/nextcloud-data
@@ -32,14 +34,15 @@ sizeOfDir=0 # dont change this !
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-#       0. Preparations
-# Check if root
+### 0. Preparations
+## Check if root
 
 if [ "$EUID" -ne 0 ]
   then echo "***error *** Please run as root"
   exit
 fi
 
+## check if pv, tar, gzip and du exists on the system
 # check if pv, tar, gzip
 if [ ! $(which pv) ]; then
 	echo "***error *** /usr/bin/pv does not exist. Please install it!"
@@ -58,7 +61,9 @@ if [ ! $(which /usr/bin/du) ]; then
         exit
 fi
 
-# Create Backup Directory TARGET
+## Create Backup Directory TARGET
+
+# fetch current date as YYYYMMDD
 
 backupLocation="$backupLocation/nextcloud_backup_$backupDate"
 
@@ -72,7 +77,7 @@ fi
 echo "############## Nextcloud Backup 101 ##############"
 
 
-#	1. Activate Maintenance Mode in nextcloud
+###	1. Activate Maintenance Mode in nextcloud
 
 if (sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --on >/dev/null); then
 	echo "1. Nextcloud Maintenance Mode ON"
@@ -82,8 +87,10 @@ else
 fi
 
 
-#	2. Backup Installation Dir in Apache Web Folder
+###	2. Backup installation directories and files and move to backupLocation
 
+# set default size to zero for counting the 
+# size of the nextcloud installation directory
 if [ -d "$backupLocation" ] && [ -d "$nextcloudInstallation" ]; then
 	echo "2. Creating Backup of Installation Directory $nextcloudInstallation ..."
 	sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
@@ -99,7 +106,8 @@ elif [ ! -d "$nextcloudInstallation" ]; then
 fi
 echo ""
 
-#	3. Backup Data Directory
+
+###	3. Backup Data Directory
 
 if [ -d "$backupLocation" ] && [ -d "$nextcloudData" ]; then
         echo "3. Creating Backup of Data Directory $nextcloudData ..."
@@ -116,7 +124,7 @@ elif [ ! -d "$nextcloudInstallation" ]; then
 fi
 
 
-#	4. MySql Backup
+###	4. MySql Backup
 
 if [ ! -d $backupLocation ]; then
 	echo "***error *** Directory does not exist: $backupLocation"
@@ -130,7 +138,7 @@ else
 fi
 
 
-#	5. Deactivate Maintenance MOde
+###	5. Deactivate Maintenance Mode
 
 if (sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off >/dev/null); then
 	echo "5. Nextcloud Maintenance Mode OFF"
@@ -140,7 +148,7 @@ fi
 
 
 
-#	6. Size, Location, Infomation Output
+###	6. Size, Location, Infomation Output
 
 backupSize=$(du -csh $backupLocation | grep total | awk '{ print $1 }')
 echo ""
