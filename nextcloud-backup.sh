@@ -148,7 +148,7 @@ echo "Creating Backup of MySQL Database $mysqlDatabase ..."
 FIXEDDATESTAMP=$(DATESTAMP)
 mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql
 echo "...compressing database dump"
-gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${FIXEDDATESTAMP}.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
+gzip < ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
 rm ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql
 rm ${mysqlConfigFile}
 
