@@ -65,7 +65,7 @@ CLI_TOOLS=(
   "tar"
   "gzip"
   "du"
-	"mysqldump"
+  "mysqldump"
 )
 
 for tool in ${CLI_TOOLS[@]}
@@ -98,10 +98,10 @@ then
 fi
 
 # fetch current date as YYYYMMDD
-DATESTAMP=$(date +%Y-%m-%d) 
+DATESTAMP() { date +%Y-%m-%d_%H-%M-%S; }
 
 # Create Backup Directory TARGET
-backupDestination="$backupDestination/nextcloud_backup_$DATESTAMP"
+backupDestination="$backupDestination/nextcloud_backup_$(DATESTAMP)"
 
 if [ -d $backupDestination ]; then
   echo "*** error*** Directory: $backupDestination already exists!"
@@ -145,7 +145,7 @@ fi
 if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
   echo "Creating Backup of Installation Directory $nextcloudInstallation ..."
   sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
-  tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-InstallationDir_$DATESTAMP.tar.gz"
+  tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
 fi
 
 echo "...okay"
@@ -169,7 +169,7 @@ fi
 if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
   echo "Creating Backup of Data Directory $nextcloudData ..."
   sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
-  tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/nextcloud-DataDir_$DATESTAMP.tar.gz"
+  tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
 fi
 
 echo "...okay"
@@ -197,10 +197,11 @@ chmod 600 ${mysqlConfigFile}
 # prepare backup
 
 echo "Creating Backup of MySQL Database $mysqlDatabase ..."
-mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+FIXEDDATESTAMP=$(DATESTAMP)
+mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql
 echo "...compressing database dump"
-gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql > "$backupDestination/nextcloud_mysqlDatabase_${DATESTAMP}.sql.gz"
-rm ${TMP_PATH}/nextcloud_db_backup_tempfile_${DATESTAMP}.sql
+gzip < ${TMP_PATH}/nextcloud_db_backup_tempfile_${FIXEDDATESTAMP}.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
+rm ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql
 rm ${mysqlConfigFile}
 
 echo "...okay"
