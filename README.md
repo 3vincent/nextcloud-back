@@ -17,7 +17,7 @@ The backup is moved to the backup location that is set in the SETUP Area (`$back
 For security reasons, the mySQL Password is passed as an environment variable.
 This variable can be set on execution: `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`
 
-## Modification for Personal Use
+## Modification for your environment
 
 Change these variables for personal use:
 ``` - backupDestination=/home/{USERDIR}
@@ -35,7 +35,7 @@ After downloading, make the script executable
 
     chmod +x nextcloud-backup.sh
 
-Edit the script with your favorite editor, to set your preferences in the top of the file `SETUP AREA`:
+Edit the script with your favorite editor, to set your preferences at the top of the file `SETUP AREA`:
 
     nano nextcloud-backup.sh
 
@@ -63,3 +63,5 @@ Run from a remote system via ssh. The mySQL Password is passed from the local sy
 ## Note
 
 - The script does not check for available disk space. Make sure you have enough disk space before running this.
+- This script was testet and fixed according to [shellcheck.net](https://shellcheck.net)
+- [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html#s1.1-which-shell-to-use) was very helpfull
