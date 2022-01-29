@@ -1,5 +1,7 @@
 #!/bin/bash
-
+#
+# nextcloud backup script
+#
 ### SETUP AREA
 ###
 
