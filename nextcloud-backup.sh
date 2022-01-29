@@ -146,7 +146,9 @@ chmod 600 ${mysqlConfigFile}
 
 echo "Creating Backup of MySQL Database $mysqlDatabase ..."
 FIXEDDATESTAMP=$(DATESTAMP)
-mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+mysqldump --defaults-file=${mysqlConfigFile} \
+  --single-transaction \
+  -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
 echo "...compressing database dump"
 gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
 rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
@@ -173,7 +175,9 @@ fi
 if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
   echo "Creating Backup of Data Directory $nextcloudData ..."
   sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
-  tar -cpf - -C "$nextcloudData" . | pv --size "${sizeOfDir}"k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
+  tar -cpf - -C "$nextcloudData" . \
+    | pv --size "${sizeOfDir}"k -p --timer --rate --bytes \
+    | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
 fi
 
 echo "...okay"
@@ -201,7 +205,9 @@ fi
 if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
   echo "Creating Backup of Installation Directory $nextcloudInstallation ..."
   sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
-  tar -cpf - -C "$nextcloudInstallation" . | pv --size "${sizeOfDir}"k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
+  tar -cpf - -C "$nextcloudInstallation" . \
+    | pv --size "${sizeOfDir}"k -p --timer --rate --bytes \
+    | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
 fi
 
 echo "...okay"
