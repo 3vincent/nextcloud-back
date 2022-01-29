@@ -3,7 +3,7 @@
 ### SETUP AREA
 ###
 
-backupDestination=/home/{USERDIR}
+backupDestination=/home/USERDIR
 nextcloudInstallation=/var/www/nextcloud
 nextcloudData=/opt/nextcloud-data
 apacheUser=www-data
@@ -68,9 +68,9 @@ CLI_TOOLS=(
   "mysqldump"
 )
 
-for tool in ${CLI_TOOLS[@]}
+for tool in "${CLI_TOOLS[@]}"
 do
-  if [ ! $(which $tool) ]; then
+  if [ ! "$(which "$tool")" ]; then
     echo "***error *** $tool does not exist on this system. Please install it! Exiting..."
     exit
   fi
@@ -80,19 +80,19 @@ done
 # if not use the password that was set in the variable
 # env var password is always preferred to the one set inside the file
 
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z $mysqlPassword ]
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z "$mysqlPassword" ]
 then
   echo "no mysql password set"
   echo "exiting..."
   exit
 fi
 
-if [ ! -z "$NEXTCLOUDMYSQLPW" ]
+if [ -n "$NEXTCLOUDMYSQLPW" ]
 then
   mysqlPassword=$NEXTCLOUDMYSQLPW
 fi
 
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ ! -z $mysqlPassword ]
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -n "$mysqlPassword" ]
 then
   echo "Using mySQL Password that was set in the file"
 fi
@@ -103,12 +103,12 @@ DATESTAMP() { date +%Y-%m-%d_%H-%M-%S; }
 # Create Backup Directory TARGET
 backupDestination="$backupDestination/nextcloud_backup_$(DATESTAMP)"
 
-if [ -d $backupDestination ]; then
+if [ -d "$backupDestination" ]; then
   echo "*** error*** Directory: $backupDestination already exists!"
   exit
 fi
 
-mkdir $backupDestination
+mkdir "$backupDestination"
 
 echo "############## Nextcloud Backup 101 ##############"
 
@@ -128,7 +128,7 @@ fi
 
 # check if destination really exists
 
-if [ ! -d $backupDestination ]; then
+if [ ! -d "$backupDestination" ]; then
   echo "***error *** Directory does not exist: $backupDestination"
   nextcloudMaintananceModeOff
   exit 1
@@ -138,7 +138,7 @@ fi
 
 mysqlConfigFile=${TMP_PATH}/.mylogin.cnf
 
-printf "[mysqldump]\nuser=${mysqlUser}\npassword=${mysqlPassword}\n" > $mysqlConfigFile
+printf "[mysqldump]\nuser=%s\npassword=%s\n" "${mysqlUser}" "${mysqlPassword}" > $mysqlConfigFile
 
 chmod 600 ${mysqlConfigFile}
 
@@ -146,10 +146,10 @@ chmod 600 ${mysqlConfigFile}
 
 echo "Creating Backup of MySQL Database $mysqlDatabase ..."
 FIXEDDATESTAMP=$(DATESTAMP)
-mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql
+mysqldump --defaults-file=${mysqlConfigFile} --single-transaction -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
 echo "...compressing database dump"
-gzip < ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
-rm ${TMP_PATH}/${FIXEDDATESTAMP}_nextcloud_db_backup_tempfile.sql
+gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
+rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
 rm ${mysqlConfigFile}
 
 echo "...okay"
@@ -173,7 +173,7 @@ fi
 if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
   echo "Creating Backup of Data Directory $nextcloudData ..."
   sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
-  tar -cpf - -C "$nextcloudData" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
+  tar -cpf - -C "$nextcloudData" . | pv --size "${sizeOfDir}"k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
 fi
 
 echo "...okay"
@@ -201,7 +201,7 @@ fi
 if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
   echo "Creating Backup of Installation Directory $nextcloudInstallation ..."
   sizeOfDir=$(du -sk "$nextcloudInstallation" | cut -f 1)
-  tar -cpf - -C "$nextcloudInstallation" . | pv --size ${sizeOfDir}k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
+  tar -cpf - -C "$nextcloudInstallation" . | pv --size "${sizeOfDir}"k -p --timer --rate --bytes | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
 fi
 
 echo "...okay"
@@ -219,7 +219,7 @@ fi
 ### 6. Size, Location, Infomation Output
 ###
 
-backupSize=$(du -csh $backupDestination | grep total | awk '{ print $1 }')
+backupSize=$(du -csh "$backupDestination" | grep total | awk '{ print $1 }')
 echo ""
 echo "Done."
 echo "Your Backup Information:"
