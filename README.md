@@ -19,15 +19,17 @@ This variable can be set on execution: `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-
 
 ## Modification for your environment
 
-Change these variables for personal use:
-``` - backupDestination=/home/{USERDIR}
-- nextcloudInstallation=/var/www/nextcloud
-- nextcloudData=/opt/nextcloud-data
-- apacheUser=www-data
-- mysqlUser=nxtclouddb
-- mysqlDatabase=nxtclouddb
-- mysqlPassword=''
-```
+Change these variables according to your installation:
+
+    backupDestination=someDirectory
+    nextcloudInstallation=/var/www/nextcloud
+    nextcloudData=/opt/nextcloud-data
+    apacheUser=www-data
+    mysqlUser=nxtclouddb
+    mysqlDatabase=nxtclouddb
+    mysqlPassword=''
+
+`mysqlPassword` can/should be left empty when the password is passed as an ENV_VAR. Examples see below.
 
 ## Setup
 
@@ -41,9 +43,9 @@ Edit the script with your favorite editor, to set your preferences at the top of
 
 ## Environment Variable vs. Config Variable
 
-(1) You can either pass your mySQL password as an environment variable at execution time, like this `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`. 
+1. You can either pass your mySQL password as an environment variable at execution time, like this `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`. 
 
-(2) Or you can edit the SETUP Area in `nextcloud-backup.sh`, and add the password at the top of the file (`mysqlPassword=''`). 
+2. Or you can edit the SETUP Area in `nextcloud-backup.sh`, and add the password at the top of the file (`mysqlPassword=''`). 
 
 If you set the password as environment variable at exection (1) it overwrites the password that is set in the file (2). 
 
