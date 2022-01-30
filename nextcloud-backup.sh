@@ -38,14 +38,29 @@ TMP_PATH=/tmp
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-function nextcloudMaintananceModeOn {
-  echo "Turn Nextcloud Maintenance Mode ON"
-  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --on >/dev/null
-}
+# if any errors quit
+set -e
 
-function nextcloudMaintananceModeOff {
-  echo "Turn Nextcloud Maintenance Mode OFF"
-  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --off 
+# set nextcloud maintenance mode on or off function
+nextcloudMaintananceSetMode() {
+  modeSet="${1}"
+
+  if [ "$modeSet" != "on" ] && [ "$modeSet" != "off" ]; then
+    echo "*** Error: Mode must be either on or off!"
+    echo "exiting..."
+    exit 1;
+  fi
+
+  echo "Turn Nextcloud Maintenance Mode: ${modeSet}"
+  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --"${modeSet}"
+  # if previous command ended without error
+  if [ "$?" -eq "0" ]; then
+    echo "....Done"
+  else
+    echo "*** Error setting maintenance mode to ${modeSet}"
+    echo "*** exiting..."
+    exit;
+  fi
 }
 
 ### 0. Preparations
