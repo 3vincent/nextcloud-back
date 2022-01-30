@@ -68,8 +68,8 @@ nextcloudMaintananceSetMode() {
 
 ## Check if root
 
-if [ "$EUID" -ne 0 ]
-  then echo "***error *** Please run as root"
+if [ "$EUID" -ne 0 ]; then
+  echo "***error *** Please run as root"
   exit
 fi
 
@@ -85,8 +85,7 @@ CLI_TOOLS=(
   "mysqldump"
 )
 
-for tool in "${CLI_TOOLS[@]}"
-do
+for tool in "${CLI_TOOLS[@]}"; do
   if [ ! "$(which "$tool")" ]; then
     echo "***error *** $tool does not exist on this system. Please install it! Exiting..."
     exit
@@ -97,20 +96,17 @@ done
 # if not use the password that was set in the variable
 # env var password is always preferred to the one set inside the file
 
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z "$mysqlPassword" ]
-then
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z "$mysqlPassword" ]; then
   echo "no mysql password set"
   echo "exiting..."
   exit
 fi
 
-if [ -n "$NEXTCLOUDMYSQLPW" ]
-then
+if [ -n "$NEXTCLOUDMYSQLPW" ]; then
   mysqlPassword=$NEXTCLOUDMYSQLPW
 fi
 
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -n "$mysqlPassword" ]
-then
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -n "$mysqlPassword" ]; then
   echo "Using mySQL Password that was set in the file"
 fi
 
