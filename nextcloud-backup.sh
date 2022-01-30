@@ -128,13 +128,7 @@ echo "############## Nextcloud Backup 101 ##############"
 ### 1. Activate Maintenance Mode in nextcloud
 ###
 
-if (nextcloudMaintananceModeOn); then
-  echo "..okay"
-	echo ""
-else
-  echo "***error *** Nextcloud occ Maintenance Mode was not successfull!"
-  exit
-fi
+nextcloudMaintananceSetMode on
 
 ### 2. MySQL Backup
 ###
@@ -143,7 +137,7 @@ fi
 
 if [ ! -d "$backupDestination" ]; then
   echo "***error *** Directory does not exist: $backupDestination"
-  nextcloudMaintananceModeOff
+  nextcloudMaintananceSetMode off
   exit 1
 fi
 
@@ -175,13 +169,13 @@ echo ""
 
 if [ ! -d "$backupDestination" ]; then
   echo "***error *** Directory not found: $backupDestination"
-  nextcloudMaintananceModeOff
+  nextcloudMaintananceSetMode off
   exit 1
 fi
 
 if [ ! -d "$nextcloudInstallation" ]; then
   echo "***error *** Directory not found: $nextcloudInstallation"
-  nextcloudMaintananceModeOff
+  nextcloudMaintananceSetMode off
   exit 1
 fi
 
@@ -205,13 +199,13 @@ sizeOfDir=0
 
 if [ ! -d "$backupDestination" ]; then
   echo "***error *** Directory not found: $backupDestination"
-  nextcloudMaintananceModeOff
+  nextcloudMaintananceSetMode off
   exit 1
 fi
 
 if [ ! -d "$nextcloudInstallation" ]; then
   echo "***error *** Directory not found: $nextcloudInstallation"
-  nextcloudMaintananceModeOff
+  nextcloudMaintananceSetMode off
   exit 1
 fi
 
@@ -229,11 +223,7 @@ echo ""
 ### 5. Deactivate Maintenance Mode
 ###
 
-if (nextcloudMaintananceModeOff); then
-  echo "...okay"
-else
-  echo "***error *** Something went wrong with turning nextcloud maintenance mode off"
-fi
+nextcloudMaintananceSetMode off
 
 ### 6. Size, Location, Infomation Output
 ###
