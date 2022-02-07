@@ -124,6 +124,35 @@ fi
 
 mkdir "$backupDestination"
 
+# check if backup destination exists after creation
+
+if [ ! -d "$backupDestination" ]; then
+  echo "***error *** Directory does not exist: $backupDestination"
+  exit 1
+fi
+
+# check if mysql4byte SETUP VAR is set to true or false
+
+if [ $mysql4byte !== true ] && [ $mysql4byte !== false ]; then
+  echo "*** Error: $mysql5byte has to be either true or false"
+  exit 1;
+fi
+
+# check if installation directory is valid in SETUP VAR
+
+if [ ! -d "$nextcloudInstallation" ]; then
+  echo "***error *** Directory not found: $nextcloudInstallation"
+  exit 1
+fi
+
+# check if data directory is valid in SETUP VAR
+
+if [ ! -d "$nextcloudData" ]; then
+  echo "***error *** Directory not found: $nextcloudData"
+  exit 1
+fi
+
+
 echo "############## Nextcloud Backup 101 ##############"
 
 ### 1. Activate Maintenance Mode in nextcloud
@@ -133,14 +162,6 @@ nextcloudMaintananceSetMode on
 
 ### 2. MySQL Backup
 ###
-
-# check if destination really exists
-
-if [ ! -d "$backupDestination" ]; then
-  echo "***error *** Directory does not exist: $backupDestination"
-  nextcloudMaintananceSetMode off
-  exit 1
-fi
 
 # write mysql config file that is used to hide the password from the process list
 
@@ -179,18 +200,6 @@ echo ""
 ### 3. Backup Data Directory
 ###
 
-if [ ! -d "$backupDestination" ]; then
-  echo "***error *** Directory not found: $backupDestination"
-  nextcloudMaintananceSetMode off
-  exit 1
-fi
-
-if [ ! -d "$nextcloudInstallation" ]; then
-  echo "***error *** Directory not found: $nextcloudInstallation"
-  nextcloudMaintananceSetMode off
-  exit 1
-fi
-
 if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
   echo "Creating Backup of Data Directory $nextcloudData ..."
   sizeOfDir=$(du -sk "$nextcloudData" | cut -f 1)
@@ -208,18 +217,6 @@ echo ""
 # set default size to zero for counting the 
 # size of the nextcloud installation directory
 sizeOfDir=0 
-
-if [ ! -d "$backupDestination" ]; then
-  echo "***error *** Directory not found: $backupDestination"
-  nextcloudMaintananceSetMode off
-  exit 1
-fi
-
-if [ ! -d "$nextcloudInstallation" ]; then
-  echo "***error *** Directory not found: $nextcloudInstallation"
-  nextcloudMaintananceSetMode off
-  exit 1
-fi
 
 if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
   echo "Creating Backup of Installation Directory $nextcloudInstallation ..."
