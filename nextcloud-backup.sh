@@ -206,6 +206,10 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
   tar -cpf - -C "$nextcloudData" . \
     | pv --size "${sizeOfDir}"k -p --timer --rate --bytes \
     | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
+else
+  echo "error@@@ ${backupDestination} or ${nextcloudData} is not available!"
+  nextcloudMaintananceSetMode off
+  exit 1
 fi
 
 echo "...okay"
@@ -224,6 +228,11 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
   tar -cpf - -C "$nextcloudInstallation" . \
     | pv --size "${sizeOfDir}"k -p --timer --rate --bytes \
     | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
+fi
+else
+  echo "error@@@ ${backupDestination} or ${nextcloudInstallation} is not available!"
+  nextcloudMaintananceSetMode off
+  exit 1
 fi
 
 echo "...okay"
