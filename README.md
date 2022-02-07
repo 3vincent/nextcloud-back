@@ -28,6 +28,7 @@ Change these variables according to your installation:
     mysqlUser=nxtclouddb
     mysqlDatabase=nxtclouddb
     mysqlPassword=''
+    mysql4byte=true
 
 `mysqlPassword` can/should be left empty when the password is passed as an ENV_VAR. Examples see below.
 
@@ -61,6 +62,8 @@ Run from the local system with MySQL Password as Env var:
 Run from a remote system via ssh. The mySQL Password is passed from the local system to the remote server with ssh:
 
     ssh -t {username}@{serverip} 'export NEXTCLOUDMYSQLPW='mysqlpassword'; nextcloud-backup.sh'
+
+[1] Enabling 4-byte support in nextcloud, [https://docs.nextcloud.com/server/latest/admin_manual/configuration_database/mysql_4byte_support.html](https://docs.nextcloud.com/server/latest/admin_manual/configuration_database/mysql_4byte_support.html)
 
 ## Note
 

@@ -12,6 +12,7 @@ apacheUser=www-data
 mysqlUser=nxtclouddb
 mysqlDatabase=nxtclouddb
 mysqlPassword=''
+mysql4byte=true
 TMP_PATH=/tmp
 
 ###
@@ -153,9 +154,20 @@ chmod 600 ${mysqlConfigFile}
 
 echo "Creating Backup of MySQL Database $mysqlDatabase ..."
 FIXEDDATESTAMP=$(DATESTAMP)
-mysqldump --defaults-file=${mysqlConfigFile} \
+
+if [ $mysql4byte == true ]; then
+  mysqldump --defaults-file=${mysqlConfigFile} \
+  --default-character-set=utf8mb4 \
   --single-transaction \
   -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+fi
+
+if [ $mysql4byte == false ]; then
+  mysqldump --defaults-file=${mysqlConfigFile} \
+  --single-transaction \
+  -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+fi
+
 echo "...compressing database dump"
 gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
 rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
