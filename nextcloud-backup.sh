@@ -231,7 +231,6 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
   tar -cpf - -C "$nextcloudInstallation" . \
     | pv --size "${sizeOfDir}"k -p --timer --rate --bytes \
     | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
-fi
 else
   echo "error@@@ ${backupDestination} or ${nextcloudInstallation} is not available!"
   nextcloudMaintananceSetMode off
