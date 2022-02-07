@@ -28,12 +28,12 @@ Change these variables according to your installation:
     mysqlUser=nxtclouddb
     mysqlDatabase=nxtclouddb
     mysqlPassword=''
-    mysql4byte=true
+    mysql4byte=1
     TMP_PATH=/tmp
 
 - `mysqlPassword` can/should be left empty when the password is passed as an ENV_VAR. Examples see below.
 
-- `mysql4byte` can be true or false. It determines if your MySQL database uses 4-byte support. Standard is true. 
+- `mysql4byte` can be true(1) or false(0). It determines if your MySQL database uses 4-byte support. Standard is true(1). 
 
 ## Setup
 
