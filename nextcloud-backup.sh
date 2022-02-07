@@ -20,29 +20,24 @@ TMP_PATH=/tmp
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
-# 1. Activate Maintenance Mode
-# 2. Backup MySQL Database
-# 3. Backup Data Dir
-# 4. Backup Installation Dir in Apache Web Folder
-# 5. Deactivate Maintenance Mode
-# 6. Size, Location and Info-Output
+#    NEXTCLOUD BACKUP 101
 #
-#    Source mainly: https://www.c-rieger.de/nextcloud-sicherung-und-wiederherstellung/
-#
+#    1. Activate Maintenance Mode
+#    2. Backup MySQL Database
+#    3. Backup Data Dir
+#    4. Backup Installation Dir in Apache Web Folder
+#    5. Deactivate Maintenance Mode
+#    6. Size, Location and Info-Output
 #
 #    Script does not check for available free space on the drive!
 #    Have Fun
-#
-#    From remote do something like this:
-#    $ scp -rp ${server-ip}:{source_dir_on_server} {destination_dir_on_local}
-#
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # if any errors quit
 set -e
 
-# set nextcloud maintenance mode on or off function
+# Function: Set nextcloud maintenance mode on or off
 nextcloudMaintananceSetMode() {
   modeSet="${1}"
 
@@ -64,6 +59,7 @@ nextcloudMaintananceSetMode() {
   fi
 }
 
+#########################################################
 ### 0. Preparations
 ###
 
@@ -153,13 +149,18 @@ if [ ! -d "$nextcloudData" ]; then
 fi
 
 
+#########################################################
+### STARTER
+
 echo "############## Nextcloud Backup 101 ##############"
 
+#########################################################
 ### 1. Activate Maintenance Mode in nextcloud
 ###
 
 nextcloudMaintananceSetMode on
 
+#########################################################
 ### 2. MySQL Backup
 ###
 
@@ -197,6 +198,7 @@ rm ${mysqlConfigFile}
 echo "...okay"
 echo ""
 
+#########################################################
 ### 3. Backup Data Directory
 ###
 
@@ -215,6 +217,7 @@ fi
 echo "...okay"
 echo ""
 
+#########################################################
 ### 4. Backup installation directories and files and move to backupDestination
 ###
 
@@ -238,11 +241,13 @@ fi
 echo "...okay"
 echo ""
 
+#########################################################
 ### 5. Deactivate Maintenance Mode
 ###
 
 nextcloudMaintananceSetMode off
 
+#########################################################
 ### 6. Size, Location, Infomation Output
 ###
 

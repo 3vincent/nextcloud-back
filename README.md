@@ -1,6 +1,6 @@
 # nextcloud-backup
   
-This bash script makes a full backup of a nextcloud installation on a LAMP Stack Server.
+This bash script makes a full backup of a nextcloud installation on a LAMP Stack Server. The script is following the [official guide](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html). 
 
 There are a few requirements: `tar` `gzip` `pv` `du` `mysqldump` need to be installed on your system.  
   
@@ -29,8 +29,11 @@ Change these variables according to your installation:
     mysqlDatabase=nxtclouddb
     mysqlPassword=''
     mysql4byte=true
+    TMP_PATH=/tmp
 
-`mysqlPassword` can/should be left empty when the password is passed as an ENV_VAR. Examples see below.
+- `mysqlPassword` can/should be left empty when the password is passed as an ENV_VAR. Examples see below.
+
+- `mysql4byte` can be true or false. It determines if your MySQL database uses 4-byte support. Standard is true. 
 
 ## Setup
 
@@ -63,8 +66,18 @@ Run from a remote system via ssh. The mySQL Password is passed from the local sy
 
     ssh -t {username}@{serverip} 'export NEXTCLOUDMYSQLPW='mysqlpassword'; nextcloud-backup.sh'
 
+## Copy from remote to local
+
+To copy backups from a remote system to your local machine, you can use a command like this 
+
+    scp -rp ${server-ip}:{source_dir_on_server} {destination_dir_on_local}
+
+
+## Sources
+
 [1] Enabling 4-byte support in nextcloud, [https://docs.nextcloud.com/server/latest/admin_manual/configuration_database/mysql_4byte_support.html](https://docs.nextcloud.com/server/latest/admin_manual/configuration_database/mysql_4byte_support.html)
 
+[2] Nextcloud Backup, [https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html)
 ## Note
 
 - The script does not check for available disk space. Make sure you have enough disk space before running this.
