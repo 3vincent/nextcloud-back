@@ -130,7 +130,7 @@ fi
 # check if mysql4byte SETUP VAR is set to true or false
 
 if [ $mysql4byte -ne 1 ] && [ $mysql4byte -ne 0 ]; then
-  echo "*** Error: $mysql5byte has to be either true or false"
+  echo "*** Error: $mysql4byte has to be either true or false"
   exit 1;
 fi
 
