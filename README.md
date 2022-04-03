@@ -17,10 +17,20 @@ The backup is moved to the backup location that is set in the SETUP Area (`$back
 For security reasons, the mySQL Password is passed as an environment variable.
 This variable can be set on execution: `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`
 
+## Setup
+
+After downloading, make sure the script is executable or run:
+
+    chmod +x nextcloud-backup.sh
+
+Copy the example config file to your users home folder that will execute the script, i.e. `~/.nextcloud-backup.config`
+
+    nano ~/.nextcloud-backup.config
+
 ## Modification for your environment
 
 All settings the script needs, directory paths, user names can be set in a config file.
-By default the config file is located in `/home/${USER}/.nextcloud-backup.config`
+By default the config file is located in `~/.nextcloud-backup.config`
 
 Change these variables according to your installation:
 
@@ -34,29 +44,24 @@ Change these variables according to your installation:
     mysql4byte=1
     TMP_PATH=/tmp
 
-- `mysqlPassword` can/should be left empty when the password is passed as an **ENV_VAR.** Examples see below.
-
-- `mysql4byte` can be true(1) or false(0). It determines if your MySQL database uses 4-byte support. Standard is true(1).
-
-## Setup
-
-After downloading, make the script executable
-
-    chmod +x nextcloud-backup.sh
-
-Edit the script with your favorite editor, to set your preferences at the top of the file `SETUP AREA`:
-
-    nano nextcloud-backup.sh
+- `backupDestination`: A directory that should exists. Make sure you have enough disk space. The script does not check this for you.
+- `nextcloudInstallation`: Directory where your Nextcloud installation lives, e.g. /var/www/nextcloud
+- `nextcloudData`: Directory where Nextcloud stores your user data, e.g. /opt/nextcloud-data
+- `apacheUser`: The user that runs your php or php-fpm environment
+- `mysqlUser`: The name of your Nextcloud MySQL database user
+- `mysqlDatabase`: The name of your Nextcloud MySQL database
+- `mysqlPassword`: Can/should be left empty when the password is passed as an **ENV_VAR.** Examples see below.
+- `mysql4byte`: Can be true(1) or false(0). It determines if your MySQL database uses 4-byte support. Standard is true(1).
 
 ## Environment Variable vs. Config Variable
 
 1. You can either pass your mySQL password as an environment variable at execution time, like this `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`.
 
-2. Or you can edit the SETUP Area in `nextcloud-backup.sh`, and add the password at the top of the file (`mysqlPassword=''`).
+2. Or you can set it up in your config file. (`mysqlPassword=''`).
 
-If you set the password as environment variable at exection (1) it overwrites the password that is set in the file (2).
+If you set the password as environment variable at exection (1) it overwrites the password that is set in the config file (2).
 
-If the password is set in the file itself (2), it mentions this at startup.
+If the password is set in the config file (2), it mentions this at startup.
 
 If both options are empty (1)+(2), the script will quit.
 
