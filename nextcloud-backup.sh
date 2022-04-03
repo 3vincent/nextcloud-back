@@ -1,19 +1,17 @@
 #!/bin/bash
-#
+
 # nextcloud backup script
-#
+# github.com/3vincent/nextcloud-backup
+
 ### SETUP AREA
 ###
+echo ""
 
-backupDestination=/home/USERDIR
-nextcloudInstallation=/var/www/nextcloud
-nextcloudData=/opt/nextcloud-data
-apacheUser=www-data
-mysqlUser=nxtclouddb
-mysqlDatabase=nxtclouddb
 mysqlPassword=''
-mysql4byte=1
-TMP_PATH=/tmp
+mysql4byte=1  #set default
+TMP_PATH=/tmp #set default
+
+CONFIGFILE=~/.nextcloud-backup.config
 
 ###
 ### END SETUP AREA
@@ -49,11 +47,12 @@ nextcloudMaintananceSetMode() {
 
   echo "Turn Nextcloud Maintenance Mode: ${modeSet}"
   sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --"${modeSet}"
+
   # if previous command ended without error
   if [ "$?" -eq "0" ]; then
     echo "....Done"
   else
-    echo "*** Error setting maintenance mode to ${modeSet}"
+    echo "*** Error: Setting maintenance mode to ${modeSet} failed"
     echo "*** exiting..."
     exit;
   fi
@@ -66,8 +65,63 @@ nextcloudMaintananceSetMode() {
 ## Check if root
 
 if [ "$EUID" -ne 0 ]; then
-  echo "***error *** Please run as root"
+  echo "*** error *** Please run as root"
   exit
+fi
+
+# Load setup variables from config file
+
+if [[ -f "$CONFIGFILE" ]]; then
+  source "$CONFIGFILE"
+elif [[ -f ./nextcloud-backup.config.example ]]; then
+  echo "*** error no config file found"
+  echo "=> Please create a config file at the location $CONFIGFILE"
+  echo "$ cp ./nextcloud-backup.config.example $CONFIGFILE"
+  echo "exiting..."
+  exit 1;
+else
+  echo "*** error no config file found"
+  echo ""
+  echo "=> Please create a config file at the location $CONFIGFILE"
+  echo "exiting..."
+  exit 1;
+fi
+
+# check if all user set paths really exist
+
+declare -a USERDIRPATHS
+
+USERDIRPATHS=(
+  $backupDestination
+  $nextcloudInstallation
+  $nextcloudData
+  $TMP_PATH
+)
+
+for usersetpath in "${USERDIRPATHS[@]}"; do
+  if [ ! -d "$usersetpath" ]; then
+    echo "***error *** $usersetpath does not exist on this system. Please check your setting in the $CONFIGFILE"
+    echo "exiting..."
+    exit 1;
+  fi
+done
+
+# check if the environment variable for the mysql Password is set
+# if not use the password that was set in the config file
+# env var password is always preferred to the one set inside the file
+
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z "$mysqlPassword" ]; then
+  echo "no mysql password set"
+  echo "exiting..."
+  exit
+fi
+
+if [ -n "$NEXTCLOUDMYSQLPW" ]; then
+  mysqlPassword=$NEXTCLOUDMYSQLPW
+fi
+
+if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -n "$mysqlPassword" ]; then
+  echo "Using mySQL Password that was set in the file"
 fi
 
 ## check if cli tool exist on the system
@@ -85,27 +139,9 @@ CLI_TOOLS=(
 for tool in "${CLI_TOOLS[@]}"; do
   if [ ! "$(which "$tool")" ]; then
     echo "***error *** $tool does not exist on this system. Please install it! Exiting..."
-    exit
+    exit 1;
   fi
 done
-
-# check if the environment variable for the mysql Password is set
-# if not use the password that was set in the variable
-# env var password is always preferred to the one set inside the file
-
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z "$mysqlPassword" ]; then
-  echo "no mysql password set"
-  echo "exiting..."
-  exit
-fi
-
-if [ -n "$NEXTCLOUDMYSQLPW" ]; then
-  mysqlPassword=$NEXTCLOUDMYSQLPW
-fi
-
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -n "$mysqlPassword" ]; then
-  echo "Using mySQL Password that was set in the file"
-fi
 
 # fetch current date as YYYYMMDD
 DATESTAMP() { date +%Y-%m-%d_%H-%M-%S; }
@@ -209,9 +245,9 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
     | pv --size "${sizeOfDir}"k -p --timer --rate --bytes \
     | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
 else
-  echo "error@@@ ${backupDestination} or ${nextcloudData} is not available!"
+  echo "*** error @@@: ${backupDestination} or ${nextcloudData} is not available!"
   nextcloudMaintananceSetMode off
-  exit 1
+  exit 1;
 fi
 
 echo "...okay"

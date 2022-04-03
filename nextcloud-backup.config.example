@@ -1,0 +1,9 @@
+backupDestination=/home/USERDIR
+nextcloudInstallation=/var/www/nextcloud
+nextcloudData=/opt/nextcloud-data
+apacheUser=www-data
+mysqlUser=nxtclouddb
+mysqlDatabase=nxtclouddb
+mysqlPassword=''
+mysql4byte=1
+TMP_PATH=/tmp
