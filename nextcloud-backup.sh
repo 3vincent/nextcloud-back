@@ -7,11 +7,13 @@
 ###
 echo ""
 
-mysqlPassword=''
+mysqlPassword='' #set default
 mysql4byte=1  #set default
 TMP_PATH=/tmp #set default
 
 CONFIGFILE=~/.nextcloud-backup.config
+CONFIGFILEREAD=false
+SCRIPTPATH=$(realpath "$0" | sed 's|\(.*\)/.*|\1|')
 
 ###
 ### END SETUP AREA
@@ -36,7 +38,7 @@ CONFIGFILE=~/.nextcloud-backup.config
 set -e
 
 # Function: Set nextcloud maintenance mode on or off
-nextcloudMaintananceSetMode() {
+nextcloudMaintenanceSetMode() {
   modeSet="${1}"
 
   if [ "$modeSet" != "on" ] && [ "$modeSet" != "off" ]; then
@@ -58,6 +60,16 @@ nextcloudMaintananceSetMode() {
   fi
 }
 
+# function exit hook, automatically called on exit
+exitHook() {
+  echo "@@@ running exit hook..."
+  if [[ $CONFIGFILEREAD = true ]]; then
+    nextcloudMaintenanceSetMode off
+  fi
+}
+
+trap exitHook EXIT
+
 #########################################################
 ### 0. Preparations
 ###
@@ -73,7 +85,8 @@ fi
 
 if [[ -f "$CONFIGFILE" ]]; then
   source "$CONFIGFILE"
-elif [[ -f ./nextcloud-backup.config.example ]]; then
+  CONFIGFILEREAD=true
+elif [[ -f ${SCRIPTPATH}/nextcloud-backup.config.example ]]; then
   echo "*** error no config file found"
   echo "=> Please create a config file at the location $CONFIGFILE"
   echo "$ cp ./nextcloud-backup.config.example $CONFIGFILE"
@@ -194,7 +207,7 @@ echo "############## Nextcloud Backup 101 ##############"
 ### 1. Activate Maintenance Mode in nextcloud
 ###
 
-nextcloudMaintananceSetMode on
+nextcloudMaintenanceSetMode on
 
 #########################################################
 ### 2. MySQL Backup
@@ -213,14 +226,14 @@ chmod 600 ${mysqlConfigFile}
 echo "Creating Backup of MySQL Database $mysqlDatabase ..."
 FIXEDDATESTAMP=$(DATESTAMP)
 
-if [ $mysql4byte -ne 1 ]; then
+if [ $mysql4byte -eq 1 ]; then
   mysqldump --defaults-file=${mysqlConfigFile} \
   --default-character-set=utf8mb4 \
   --single-transaction \
   -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
 fi
 
-if [ $mysql4byte -ne 0 ]; then
+if [ $mysql4byte -eq 0 ]; then
   mysqldump --defaults-file=${mysqlConfigFile} \
   --single-transaction \
   -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
@@ -246,7 +259,7 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudData" ]; then
     | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-DataDir.tar.gz"
 else
   echo "*** error @@@: ${backupDestination} or ${nextcloudData} is not available!"
-  nextcloudMaintananceSetMode off
+  nextcloudMaintenanceSetMode off
   exit 1;
 fi
 
@@ -269,7 +282,7 @@ if [ -d "$backupDestination" ] && [ -d "$nextcloudInstallation" ]; then
     | gzip -c > "$backupDestination/$(DATESTAMP)_nextcloud-InstallationDir.tar.gz"
 else
   echo "error@@@ ${backupDestination} or ${nextcloudInstallation} is not available!"
-  nextcloudMaintananceSetMode off
+  nextcloudMaintenanceSetMode off
   exit 1
 fi
 
@@ -280,7 +293,7 @@ echo ""
 ### 5. Deactivate Maintenance Mode
 ###
 
-nextcloudMaintananceSetMode off
+nextcloudMaintenanceSetMode off
 
 #########################################################
 ### 6. Size, Location, Infomation Output
