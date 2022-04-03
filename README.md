@@ -4,6 +4,10 @@ This bash script makes a full backup of a nextcloud installation on a LAMP Stack
 
 There are a few requirements: `tar` `gzip` `pv` `du` `mysqldump` need to be installed on your system.
 
+## Installation
+
+    git clone https://github.com/3vincent/nextcloud-backup.git
+
 ## Functionality
 
 The script makes a Backup of your nextcloud Installation by putting all files and databases in tar.bz archives:
