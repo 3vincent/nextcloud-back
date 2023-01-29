@@ -147,6 +147,7 @@ CLI_TOOLS=(
   "gzip"
   "du"
   "mysqldump"
+  "php"
 )
 
 for tool in "${CLI_TOOLS[@]}"; do

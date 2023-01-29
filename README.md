@@ -2,7 +2,7 @@
 
 This bash script makes a full backup of a nextcloud installation on a LAMP Stack Server. The script is following the [official guide](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html).
 
-There are a few requirements: `tar` `gzip` `pv` `du` `mysqldump` need to be installed on your system.
+There are a few requirements: `tar` `gzip` `pv` `du` `mysqldump` `php` need to be installed on your system.
 
 ## Installation
 
