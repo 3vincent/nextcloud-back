@@ -48,7 +48,7 @@ nextcloudMaintenanceSetMode() {
   fi
 
   echo "Turn Nextcloud Maintenance Mode: ${modeSet}"
-  sudo -u $apacheUser $nextcloudInstallation/occ maintenance:mode --"${modeSet}"
+  sudo -u $apacheUser php $nextcloudInstallation/occ maintenance:mode --"${modeSet}"
 
   # if previous command ended without error
   if [ "$?" -eq "0" ]; then
