@@ -2,7 +2,8 @@
 
 This bash script makes a full backup of a nextcloud installation on a LAMP Stack Server. The script is following the [official guide](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html).
 
-There are a few requirements: `tar` `gzip` `pv` `du` `mysqldump` `php` need to be installed on your system.
+There are a few requirements: `tar` `gzip` `pv` `du` `php` need to be installed on your system.
+Depending on you database configuration you will also need to have `mysqldump` or `pg_dump` installed
 
 ## Installation
 
@@ -14,11 +15,11 @@ The script makes a Backup of your nextcloud Installation by putting all files an
 
 - Installation directory (i.e. `/var/www/nextcloud`)
 - Data directory (i.e. `/opt/nextcloud-data`)
-- MySQL database
+- MySQL or Postgresql database
 
 The backup is moved to the backup location that is set in the SETUP Area (`$backupDestination`).
 
-For security reasons, the mySQL Password is passed as an environment variable.
+For security reasons, the database password is passed as an environment variable.
 This variable can be set on execution: `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`
 
 ## Setup
@@ -42,9 +43,10 @@ Change these variables according to your installation:
     nextcloudInstallation=/var/www/nextcloud
     nextcloudData=/opt/nextcloud-data
     apacheUser=www-data
-    mysqlUser=nxtclouddb
-    mysqlDatabase=nxtclouddb
-    mysqlPassword=''
+    databaseType=postgres
+    databaseUser=nxtclouddb
+    databaseDatabaseName=nxtclouddb
+    databasePassword=''
     mysql4byte=1
     TMP_PATH=/tmp
 
@@ -52,16 +54,17 @@ Change these variables according to your installation:
 - `nextcloudInstallation`: Directory where your Nextcloud installation lives, e.g. /var/www/nextcloud
 - `nextcloudData`: Directory where Nextcloud stores your user data, e.g. /opt/nextcloud-data
 - `apacheUser`: The user that runs your php or php-fpm environment
-- `mysqlUser`: The name of your Nextcloud MySQL database user
-- `mysqlDatabase`: The name of your Nextcloud MySQL database
-- `mysqlPassword`: Can/should be left empty when the password is passed as an **ENV_VAR.** Examples see below.
-- `mysql4byte`: Can be true(1) or false(0). It determines if your MySQL database uses 4-byte support. Standard is true(1).
+- `databaseType`: Can be either **mysql** or **postgres**
+- `databaseUser`: The name of your Nextcloud MySQL or postgresql database user
+- `databaseDatabaseName`: The name of your Nextcloud MySQL or Postgresql database
+- `databasePassword`: Can/should be left empty when the password is passed as an **ENV_VAR.** Examples see below.
+- `mysql4byte`: Can be true(1) or false(0). It determines if your MySQL database uses 4-byte support. Standard is true(1). If you use postgresql you can ignore this.
 
 ## Environment Variable vs. Config Variable
 
-1. You can either pass your mySQL password as an environment variable at execution time, like this `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`.
+1. You can either pass your database password as an environment variable at execution time, like this `NEXTCLOUDDATABASEPW=mypassword ./nextcloud-backup.sh`.
 
-2. Or you can set it up in your config file. (`mysqlPassword=''`).
+2. Or you can set it up in your config file. (`databasePassword=''`).
 
 If you set the password as environment variable at exection (1) it overwrites the password that is set in the config file (2).
 
@@ -73,11 +76,11 @@ If both options are empty (1)+(2), the script will quit.
 
 Run from the local system with MySQL Password as Env var:
 
-    NEXTCLOUDMYSQLPW='mysqlpassword' ./nextcloud-backup.sh
+    NEXTCLOUDDATABASEPW='mydatabasepassword' ./nextcloud-backup.sh
 
-Run from a remote system via ssh. The mySQL Password is passed from the local system to the remote server with ssh:
+Run from a remote system via ssh. The database password is passed from the local system to the remote server with ssh:
 
-    ssh -t {username}@{serverip} 'export NEXTCLOUDMYSQLPW='mysqlpassword'; nextcloud-backup.sh'
+    ssh -t {username}@{serverip} 'export NEXTCLOUDDATABASEPW='mysqlpassword'; nextcloud-backup.sh'
 
 ## Copy from remote to local
 

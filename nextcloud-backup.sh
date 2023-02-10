@@ -7,7 +7,7 @@
 ###
 echo ""
 
-mysqlPassword='' #set default
+databasePassword='' #set default
 mysql4byte=1  #set default
 TMP_PATH=/tmp #set default
 
@@ -23,7 +23,7 @@ SCRIPTPATH=$(realpath "$0" | sed 's|\(.*\)/.*|\1|')
 #    NEXTCLOUD BACKUP 101
 #
 #    1. Activate Maintenance Mode
-#    2. Backup MySQL Database
+#    2. Backup Database
 #    3. Backup Data Dir
 #    4. Backup Installation Dir in Apache Web Folder
 #    5. Deactivate Maintenance Mode
@@ -48,7 +48,7 @@ nextcloudMaintenanceSetMode() {
   fi
 
   echo "Turn Nextcloud Maintenance Mode: ${modeSet}"
-  sudo -u $apacheUser php $nextcloudInstallation/occ maintenance:mode --"${modeSet}"
+  sudo -u "${apacheUser}" php "${nextcloudInstallation}"/occ maintenance:mode --"${modeSet}"
 
   # if previous command ended without error
   if [ "$?" -eq "0" ]; then
@@ -105,10 +105,10 @@ fi
 declare -a USERDIRPATHS
 
 USERDIRPATHS=(
-  $backupDestination
-  $nextcloudInstallation
-  $nextcloudData
-  $TMP_PATH
+  "$backupDestination"
+  "$nextcloudInstallation"
+  "$nextcloudData"
+  "$TMP_PATH"
 )
 
 for usersetpath in "${USERDIRPATHS[@]}"; do
@@ -119,22 +119,30 @@ for usersetpath in "${USERDIRPATHS[@]}"; do
   fi
 done
 
-# check if the environment variable for the mysql Password is set
-# if not use the password that was set in the config file
-# env var password is always preferred to the one set inside the file
-
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -z "$mysqlPassword" ]; then
-  echo "no mysql password set"
+# check if database type is either mysql or postgres
+if [ "$databaseType" != "mysql" ] && [ "$databaseType" != "postgres" ]; then
+  echo "no database type set"
+  echo "=> Please set a databaseType of either mysql or postgres in the config file"
   echo "exiting..."
   exit
 fi
 
-if [ -n "$NEXTCLOUDMYSQLPW" ]; then
-  mysqlPassword=$NEXTCLOUDMYSQLPW
+# check if the environment variable for the database Password is set
+# if not use the password that was set in the config file
+# env var password is always preferred to the one set inside the file
+
+if [ -z "$NEXTCLOUDDATABASEPW" ] && [ -z "$databasePassword" ]; then
+  echo "no database password set"
+  echo "exiting..."
+  exit
 fi
 
-if [ -z "$NEXTCLOUDMYSQLPW" ] && [ -n "$mysqlPassword" ]; then
-  echo "Using mySQL Password that was set in the file"
+if [ -n "$NEXTCLOUDDATABASEPW" ]; then
+  databasePassword=$NEXTCLOUDDATABASEPW
+fi
+
+if [ -z "$NEXTCLOUDDATABASEPW" ] && [ -n "$databasePassword" ]; then
+  echo "Using database Password that was set in the config file"
 fi
 
 ## check if cli tool exist on the system
@@ -146,7 +154,6 @@ CLI_TOOLS=(
   "tar"
   "gzip"
   "du"
-  "mysqldump"
   "php"
 )
 
@@ -156,6 +163,20 @@ for tool in "${CLI_TOOLS[@]}"; do
     exit 1;
   fi
 done
+
+if [ "$databaseType" = 'mysql' ]; then
+  if [ ! "$(which mysqldump)" ]; then
+    echo "***error *** mysqldump does not exist on this system. Please install it! Exiting..."
+    exit 1;
+  fi
+fi
+
+if [ "$databaseType" = 'postgres' ]; then
+  if [ ! "$(which pg_dump)" ]; then
+    echo "***error *** pg_dump does not exist on this system. Please install it! Exiting..."
+    exit 1;
+  fi
+fi
 
 # fetch current date as YYYYMMDD
 DATESTAMP() { date +%Y-%m-%d_%H-%M-%S; }
@@ -175,13 +196,6 @@ mkdir "$backupDestination"
 if [ ! -d "$backupDestination" ]; then
   echo "***error *** Directory does not exist: $backupDestination"
   exit 1
-fi
-
-# check if mysql4byte SETUP VAR is set to true or false
-
-if [ $mysql4byte -ne 1 ] && [ $mysql4byte -ne 0 ]; then
-  echo "*** Error: $mysql4byte has to be either true or false"
-  exit 1;
 fi
 
 # check if installation directory is valid in SETUP VAR
@@ -211,42 +225,65 @@ echo "############## Nextcloud Backup 101 ##############"
 nextcloudMaintenanceSetMode on
 
 #########################################################
-### 2. MySQL Backup
+### 2. DATABASE Backup
 ###
 
-# write mysql config file that is used to hide the password from the process list
+if [ "$databaseType" = "mysql" ]; then
+  # check if mysql4byte SETUP VAR is set to true or false
 
-mysqlConfigFile=${TMP_PATH}/.mylogin.cnf
+  if [ $mysql4byte -ne 1 ] && [ $mysql4byte -ne 0 ]; then
+    echo "*** Error: $mysql4byte has to be either true or false"
+    exit 1;
+  fi
 
-printf "[mysqldump]\nuser=%s\npassword=%s\n" "${mysqlUser}" "${mysqlPassword}" > $mysqlConfigFile
 
-chmod 600 ${mysqlConfigFile}
+  # write mysql config file that is used to hide the password from the process list
 
-# prepare backup
+  mysqlConfigFile=${TMP_PATH}/.mylogin.cnf
 
-echo "Creating Backup of MySQL Database $mysqlDatabase ..."
-FIXEDDATESTAMP=$(DATESTAMP)
+  printf "[mysqldump]\nuser=%s\npassword=%s\n" "${databaseUser}" "${databasePassword}" > $mysqlConfigFile
 
-if [ $mysql4byte -eq 1 ]; then
-  mysqldump --defaults-file=${mysqlConfigFile} \
-  --default-character-set=utf8mb4 \
-  --single-transaction \
-  -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+  chmod 600 ${mysqlConfigFile}
+
+
+
+  # prepare backup
+  echo "Creating Backup of MySQL Database $databaseDatabaseName ..."
+  FIXEDDATESTAMP=$(DATESTAMP)
+
+  if [ $mysql4byte -eq 1 ]; then
+    mysqldump --defaults-file=${mysqlConfigFile} \
+    --default-character-set=utf8mb4 \
+    --single-transaction \
+    -h localhost "$databaseDatabaseName" > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+  fi
+
+  if [ $mysql4byte -eq 0 ]; then
+    mysqldump --defaults-file=${mysqlConfigFile} \
+    --single-transaction \
+    -h localhost "$databaseDatabaseName" > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+  fi
+
+  echo "...compressing database dump"
+  gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
+  rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+  rm ${mysqlConfigFile}
+
+  echo "...okay"
+  echo ""
 fi
 
-if [ $mysql4byte -eq 0 ]; then
-  mysqldump --defaults-file=${mysqlConfigFile} \
-  --single-transaction \
-  -h localhost $mysqlDatabase > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
+if [ "$databaseType" = "postgres" ]; then
+  echo "Creating Backup of Postgresql Database $databaseDatabaseName ..."
+  FIXEDDATESTAMP=$(DATESTAMP)
+
+  PGPASSWORD="$databasePassword" pg_dump "$databaseDatabaseName" -h 127.0.0.1 -U "$databaseUser" -f ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.bak
+
+  echo "...compressing database dump"
+  gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.bak > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_postgresDatabase.sql.gz"
+  rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.bak
 fi
 
-echo "...compressing database dump"
-gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
-rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
-rm ${mysqlConfigFile}
-
-echo "...okay"
-echo ""
 
 #########################################################
 ### 3. Backup Data Directory
