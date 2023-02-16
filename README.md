@@ -3,7 +3,7 @@
 This bash script makes a full backup of a nextcloud installation on a LAMP Stack Server. The script is following the [official guide](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html).
 
 There are a few requirements: `tar` `gzip` `pv` `du` `php` need to be installed on your system.
-Depending on you database configuration you will also need to have `mysqldump` or `pg_dump` installed
+Depending on your database configuration you will also need to have `mysqldump` or `pg_dump` installed
 
 ## Installation
 
@@ -20,7 +20,7 @@ The script makes a Backup of your nextcloud Installation by putting all files an
 The backup is moved to the backup location that is set in the SETUP Area (`$backupDestination`).
 
 For security reasons, the database password is passed as an environment variable.
-This variable can be set on execution: `NEXTCLOUDMYSQLPW=mypassword ./nextcloud-backup.sh`
+This variable can be set on execution: `NEXTCLOUDDATABASEPW=mypassword ./nextcloud-backup.sh`
 
 ## Setup
 

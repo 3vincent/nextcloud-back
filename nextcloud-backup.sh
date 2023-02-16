@@ -77,14 +77,12 @@ preparations() {
   ###
 
   ## Check if root
-
   if [ "$EUID" -ne 0 ]; then
     echo "*** error *** Please run as root"
     exit
   fi
 
   # Load setup variables from config file
-
   if [[ -f "$CONFIGFILE" ]]; then
     source "$CONFIGFILE"
     CONFIGFILEREAD=true
@@ -103,7 +101,6 @@ preparations() {
   fi
 
   # check if all user set paths really exist
-
   declare -a USERDIRPATHS
 
   USERDIRPATHS=(
@@ -132,7 +129,6 @@ preparations() {
   # check if the environment variable for the database Password is set
   # if not use the password that was set in the config file
   # env var password is always preferred to the one set inside the file
-
   if [ -z "$NEXTCLOUDDATABASEPW" ] && [ -z "$databasePassword" ]; then
     echo "no database password set"
     echo "exiting..."
@@ -144,11 +140,10 @@ preparations() {
   fi
 
   if [ -z "$NEXTCLOUDDATABASEPW" ] && [ -n "$databasePassword" ]; then
-    echo "Using database Password that was set in the config file"
+    echo "Using database password that was set in the config file"
   fi
 
   ## check if cli tool exist on the system
-
   declare -a CLI_TOOLS
 
   CLI_TOOLS=(
@@ -194,21 +189,18 @@ preparations() {
   mkdir "$backupDestination"
 
   # check if backup destination exists after creation
-
   if [ ! -d "$backupDestination" ]; then
     echo "***error *** Directory does not exist: $backupDestination"
     exit 1
   fi
 
   # check if installation directory is valid in SETUP VAR
-
   if [ ! -d "$nextcloudInstallation" ]; then
     echo "***error *** Directory not found: $nextcloudInstallation"
     exit 1
   fi
 
   # check if data directory is valid in SETUP VAR
-
   if [ ! -d "$nextcloudData" ]; then
     echo "***error *** Directory not found: $nextcloudData"
     exit 1
@@ -219,57 +211,66 @@ databaseBackup() {
   #########################################################
   ### DATABASE Backup
   ###
+  thisDatabaseType="${1}"
   FIXEDDATESTAMP=$(DATESTAMP)
+
+  if [ "$thisDatabaseType" != "mysql" ] && [ "$thisDatabaseType" != "postgres" ]; then
+    echo "*** Error: DatabaseType has to be either mysql or postgres"
+    echo "exiting..."
+    exit 1;
+  fi
 
   echo "Creating Backup of ${databaseType} Database ${databaseDatabaseName} ..."
 
-  ## MYSQL BACKUP
-  if [ "$databaseType" = "mysql" ]; then
-    # check if mysql4byte SETUP VAR is set to true or false
-    if [ $mysql4byte -ne 1 ] && [ $mysql4byte -ne 0 ]; then
-      echo "*** Error: $mysql4byte has to be either true or false"
-      exit 1;
-    fi
-
-    # write mysql config file that is used to hide the password from the process list
-    mysqlConfigFile=${TMP_PATH}/.mylogin.cnf
-
-    printf "[mysqldump]\nuser=%s\npassword=%s\n" "${databaseUser}" "${databasePassword}" > $mysqlConfigFile
-
-    chmod 600 ${mysqlConfigFile}
-
-
-    # prepare backup
-    if [ $mysql4byte -eq 1 ]; then
-      mysqldump --defaults-file=${mysqlConfigFile} \
-      --default-character-set=utf8mb4 \
-      --single-transaction \
-      -h localhost "$databaseDatabaseName" > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
-    fi
-
-    if [ $mysql4byte -eq 0 ]; then
-      mysqldump --defaults-file=${mysqlConfigFile} \
-      --single-transaction \
-      -h localhost "$databaseDatabaseName" > ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
-    fi
-
-    echo "...compressing database dump"
-    gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
-    rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.sql
-    rm ${mysqlConfigFile}
+  if [ "$thisDatabaseType" = "mysql" ]; then
+    databaseBackupMysql
   fi
 
-  ## POSTGRES BACKUP
-  if [ "$databaseType" = "postgres" ]; then
-    PGPASSWORD="$databasePassword" pg_dump "$databaseDatabaseName" -h 127.0.0.1 -U "$databaseUser" -f ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.bak
-
-    echo "...compressing database dump"
-    gzip < ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.bak > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_postgresDatabase.sql.gz"
-    rm ${TMP_PATH}/"${FIXEDDATESTAMP}"_nextcloud_db_backup_tempfile.bak
+  if [ "$thisDatabaseType" = "postgres" ]; then
+    databaseBackupPostgres
   fi
 
   echo "...done"
   echo ""
+}
+
+databaseBackupMysql() {
+  ## MYSQL BACKUP
+  # check if mysql4byte SETUP VAR is set to true or false
+  if [ $mysql4byte -ne 1 ] && [ $mysql4byte -ne 0 ]; then
+    echo "*** Error: $mysql4byte has to be either true or false"
+    exit 1;
+  fi
+
+  # write mysql config file that is used to hide the password from the process list
+  mysqlConfigFile=${TMP_PATH}/.mylogin.cnf
+  printf "[mysqldump]\nuser=%s\npassword=%s\n" "${databaseUser}" "${databasePassword}" > $mysqlConfigFile
+  chmod 600 ${mysqlConfigFile}
+
+  # prepare backup
+  if [ $mysql4byte -eq 1 ]; then
+    mysqldump --defaults-file=${mysqlConfigFile} \
+    --default-character-set=utf8mb4 \
+    --single-transaction \
+    -h localhost "$databaseDatabaseName" \
+    | gzip -9c > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
+  fi
+
+  if [ $mysql4byte -eq 0 ]; then
+    mysqldump --defaults-file=${mysqlConfigFile} \
+    --single-transaction \
+    -h localhost "$databaseDatabaseName" \
+    | gzip -9c  > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_mysqlDatabase.sql.gz"
+  fi
+
+  rm ${mysqlConfigFile}
+}
+
+databaseBackupPostgres() {
+  ## POSTGRES BACKUP
+  PGPASSWORD="$databasePassword" pg_dump "$databaseDatabaseName" -h 127.0.0.1 \
+    -U "$databaseUser" \
+    | gzip -9c > "$backupDestination/${FIXEDDATESTAMP}_nextcloud_postgresDatabase.sql.gz"
 }
 
 dataBackup() {
@@ -316,7 +317,6 @@ installdirBackup() {
 
   echo "...done"
   echo ""
-
 }
 
 finishOutput() {
@@ -332,16 +332,16 @@ finishOutput() {
   echo "Size:          $backupSize"
 }
 
-
 main() {
   #########################################################
   ### Main Function
   ###
+
   preparations
 
   nextcloudMaintenanceSetMode on
 
-  databaseBackup
+  databaseBackup "$databaseType"
 
   dataBackup
 
