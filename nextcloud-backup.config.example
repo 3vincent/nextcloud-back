@@ -7,4 +7,6 @@ databaseUser=nxtclouddb
 databaseDatabaseName=nxtclouddb
 databasePassword=''
 mysql4byte=1
+encryption=1
+encryptionPassword=''
 TMP_PATH=/tmp
